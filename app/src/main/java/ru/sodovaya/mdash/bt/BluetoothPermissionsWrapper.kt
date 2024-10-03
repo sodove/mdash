@@ -78,8 +78,13 @@ fun BluetoothPermissionsWrapper(
         )
     }
 
+    val notificationsPermissionSet = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        setOf(Manifest.permission.POST_NOTIFICATIONS)
+    } else { setOf() }
+
     PermissionBox(
-        permissions = (bluetoothPermissionSet + locationPermission + extraPermissions).toList(),
+        permissions = (bluetoothPermissionSet + locationPermission +
+                notificationsPermissionSet + extraPermissions).toList(),
         contentAlignment = Alignment.Center,
     ) {
         // Check to see if the Bluetooth classic feature is available.
