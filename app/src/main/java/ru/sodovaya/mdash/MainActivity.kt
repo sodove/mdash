@@ -10,7 +10,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Modifier
-import ru.sodovaya.mdash.bt.MainScreen
+import cafe.adriel.voyager.navigator.Navigator
+import cafe.adriel.voyager.transitions.FadeTransition
+import ru.sodovaya.mdash.ui.screens.ConnectionScreen
 import ru.sodovaya.mdash.ui.theme.MtelemetryTheme
 
 class MainActivity : ComponentActivity() {
@@ -24,7 +26,11 @@ class MainActivity : ComponentActivity() {
                     Column(
                         modifier = Modifier.padding(innerPadding)
                     ) {
-                        MainScreen()
+                        Navigator(
+                            ConnectionScreen()
+                        ) {
+                            FadeTransition(it)
+                        }
                     }
                 }
             }

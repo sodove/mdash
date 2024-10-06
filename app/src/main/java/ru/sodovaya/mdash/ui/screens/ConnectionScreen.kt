@@ -1,4 +1,4 @@
-package ru.sodovaya.mdash.bt
+package ru.sodovaya.mdash.ui.screens
 
 import android.Manifest
 import android.annotation.SuppressLint
@@ -47,7 +47,21 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import cafe.adriel.voyager.core.screen.Screen
+import cafe.adriel.voyager.navigator.LocalNavigator
+import cafe.adriel.voyager.navigator.currentOrThrow
 import kotlinx.coroutines.delay
+
+class ConnectionScreen: Screen {
+    @SuppressLint("MissingPermission")
+    @Composable
+    override fun Content() {
+        val navigator = LocalNavigator.currentOrThrow
+        FindDevicesScreen {
+            navigator.push(MainScreen(it))
+        }
+    }
+}
 
 @RequiresPermission(Manifest.permission.BLUETOOTH_SCAN)
 @Composable

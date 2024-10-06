@@ -15,10 +15,11 @@ import android.os.Build
 import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
-import ru.sodovaya.mdash.Utils.READ_UUID
-import ru.sodovaya.mdash.Utils.SEND_UUID
-import ru.sodovaya.mdash.Utils.SERVICE_UUID
-import ru.sodovaya.mdash.Utils.parcelable
+import ru.sodovaya.mdash.R
+import ru.sodovaya.mdash.utils.READ_UUID
+import ru.sodovaya.mdash.utils.SEND_UUID
+import ru.sodovaya.mdash.utils.SERVICE_UUID
+import ru.sodovaya.mdash.utils.parcelable
 import java.util.UUID
 import kotlin.concurrent.timer
 
@@ -38,7 +39,10 @@ class BluetoothForegroundService : Service() {
         device?.address?.let { Log.d("BFGS", it) }
         device?.let { connectToDevice(it) }
 
-        startForeground(1, createNotification())
+        startForeground(
+            /* id = */ 1,
+            /* notification = */ createNotification(),
+        )
         return START_STICKY
     }
 
@@ -46,17 +50,22 @@ class BluetoothForegroundService : Service() {
         val notificationChannelId = "BLUETOOTH_SERVICE_CHANNEL"
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val notificationChannel = NotificationChannel(
-                notificationChannelId,
-                "Bluetooth Service",
-                NotificationManager.IMPORTANCE_LOW
+                /* id = */ notificationChannelId,
+                /* name = */ "MDash Service",
+                /* importance = */ NotificationManager.IMPORTANCE_LOW
             )
+            notificationChannel.description = "MDash Service"
+            notificationChannel.enableVibration(false)
             val manager = getSystemService(NotificationManager::class.java)
             manager.createNotificationChannel(notificationChannel)
         }
 
-        val notificationBuilder = NotificationCompat.Builder(this, notificationChannelId)
-            .setContentTitle("Bluetooth Connection")
+        val notificationBuilder = NotificationCompat.Builder(
+            /* context = */ this,
+            /* channelId = */ notificationChannelId
+        ).setContentTitle("Bluetooth Connection")
             .setContentText("Your device is connected.")
+            .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setOngoing(true)
 
         return notificationBuilder.build()
@@ -74,13 +83,9 @@ class BluetoothForegroundService : Service() {
                 characteristicWrite = gatt.getService(SERVICE_UUID)?.getCharacteristic(SEND_UUID)
                 characteristicRead = gatt.getService(SERVICE_UUID)?.getCharacteristic(READ_UUID)
 
-                characteristicRead?.let {
-                    enableNotifications(it)
-                }
-                gatt.let {
-                    timer(period = 500) {
-                        sendNoise(gatt, characteristicWrite!!)
-                    }
+                enableNotifications(characteristicRead!!)
+                timer(period = 500) {
+                    sendNoise(gatt, characteristicWrite!!)
                 }
             }
 
@@ -105,7 +110,6 @@ class BluetoothForegroundService : Service() {
                 }
             }
         })
-
     }
 
     override fun onDestroy() {

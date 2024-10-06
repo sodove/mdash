@@ -1,19 +1,3 @@
-/*
- * Copyright 2023 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package ru.sodovaya.mdash.bt
 
 import android.Manifest
@@ -42,9 +26,6 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.getSystemService
 
 
-/**
- * This composable wraps the permission logic and checks if bluetooth it's available and enabled
- */
 @Composable
 fun BluetoothPermissionsWrapper(
     extraPermissions: Set<String> = emptySet(),
@@ -54,8 +35,6 @@ fun BluetoothPermissionsWrapper(
     val packageManager = context.packageManager
     val bluetoothAdapter = context.getSystemService<BluetoothManager>()?.adapter
 
-    // If we derive physical location from BT devices or if the device runs on Android 11 or below
-    // we need location permissions otherwise we don't need to request them (see AndroidManifest).
     val locationPermission = if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
         setOf(
             Manifest.permission.ACCESS_FINE_LOCATION,
@@ -65,7 +44,6 @@ fun BluetoothPermissionsWrapper(
         emptySet()
     }
 
-    // For Android 12 and above we only need connect and scan
     val bluetoothPermissionSet = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
         setOf(
             Manifest.permission.BLUETOOTH_CONNECT,
@@ -87,11 +65,8 @@ fun BluetoothPermissionsWrapper(
                 notificationsPermissionSet + extraPermissions).toList(),
         contentAlignment = Alignment.Center,
     ) {
-        // Check to see if the Bluetooth classic feature is available.
         val hasBT = packageManager.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH)
-        // Check to see if the BLE feature is available.
         val hasBLE = packageManager.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)
-        // Check if the adapter is enabled
         var isBTEnabled by remember {
             mutableStateOf(bluetoothAdapter?.isEnabled == true)
         }
