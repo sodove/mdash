@@ -58,7 +58,7 @@ class ConnectionScreen: Screen {
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
         FindDevicesScreen {
-            navigator.push(MainScreen(it))
+            navigator.replaceAll(MainScreen(it.address, runCatching { it.name }.getOrNull() ?: "unk"))
         }
     }
 }

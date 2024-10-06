@@ -4,12 +4,15 @@ import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.Service
+import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCallback
 import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.BluetoothGattDescriptor
+import android.bluetooth.BluetoothManager
 import android.bluetooth.BluetoothProfile
+import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.IBinder
@@ -19,12 +22,14 @@ import ru.sodovaya.mdash.R
 import ru.sodovaya.mdash.utils.READ_UUID
 import ru.sodovaya.mdash.utils.SEND_UUID
 import ru.sodovaya.mdash.utils.SERVICE_UUID
-import ru.sodovaya.mdash.utils.parcelable
 import java.util.UUID
 import kotlin.concurrent.timer
 
 class BluetoothForegroundService : Service() {
-
+    private val bluetoothAdapter: BluetoothAdapter by lazy {
+        val bluetoothManager = getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
+        bluetoothManager.adapter
+    }
     private var gatt: BluetoothGatt? = null
     private var characteristicWrite: BluetoothGattCharacteristic? = null
     private var characteristicRead: BluetoothGattCharacteristic? = null
@@ -35,7 +40,8 @@ class BluetoothForegroundService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Log.d("BFGS", "Service started")
-        val device: BluetoothDevice? = intent?.parcelable("device")
+        val deviceAddress: String? = intent?.getStringExtra("device")
+        val device = bluetoothAdapter.getRemoteDevice(deviceAddress)
         device?.address?.let { Log.d("BFGS", it) }
         device?.let { connectToDevice(it) }
 
@@ -63,8 +69,8 @@ class BluetoothForegroundService : Service() {
         val notificationBuilder = NotificationCompat.Builder(
             /* context = */ this,
             /* channelId = */ notificationChannelId
-        ).setContentTitle("Bluetooth Connection")
-            .setContentText("Your device is connected.")
+        ).setContentTitle("MDash Status")
+            .setContentText("Foreground service is active.")
             .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setOngoing(true)
 

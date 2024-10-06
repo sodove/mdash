@@ -2,7 +2,6 @@ package ru.sodovaya.mdash.ui.screens
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.bluetooth.BluetoothDevice
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -24,6 +23,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -37,6 +37,7 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import cafe.adriel.voyager.transitions.FadeTransition
+import ru.sodovaya.mdash.composables.LocalScooterStatus
 import ru.sodovaya.mdash.composables.TabNavigationItem
 import ru.sodovaya.mdash.service.BluetoothForegroundService
 import ru.sodovaya.mdash.ui.tabs.MainDashboardTab
@@ -44,13 +45,13 @@ import ru.sodovaya.mdash.ui.tabs.SpeedVolumeTab
 import ru.sodovaya.mdash.utils.parseScooterData
 
 
-data class MainScreen(val device: BluetoothDevice): Screen {
+data class MainScreen(val device: String, val name: String): Screen {
     @SuppressLint("MissingPermission")
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        ConnectedDeviceScreen(device) {
-            navigator.pop()
+        ConnectedDeviceScreen(name, device) {
+            navigator.replaceAll(ConnectionScreen())
         }
     }
 }
@@ -59,7 +60,7 @@ data class MainScreen(val device: BluetoothDevice): Screen {
 @SuppressLint("InlinedApi")
 @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
 @Composable
-fun ConnectedDeviceScreen(device: BluetoothDevice, onClose: () -> Unit) {
+fun ConnectedDeviceScreen(name: String, device: String, onClose: () -> Unit) {
     val context = LocalContext.current
     var scooterData by remember { mutableStateOf(ScooterData()) }
 
@@ -98,7 +99,7 @@ fun ConnectedDeviceScreen(device: BluetoothDevice, onClose: () -> Unit) {
     }
 
     Navigator(
-        MainDashboardTab(scooterData)
+        MainDashboardTab
     ) { navigator ->
         Scaffold(
             topBar = {
@@ -114,23 +115,25 @@ fun ConnectedDeviceScreen(device: BluetoothDevice, onClose: () -> Unit) {
                         }
                     },
                     title = {
-                        Text(
-                            LocalNavigator.currentOrThrow.items.last().key.split(".").last()
-                        )
+                        Text( runCatching { name }.getOrNull() ?: "Unknown")
                     }
                 )
             },
             bottomBar = {
                 NavigationBar {
-                    TabNavigationItem(MainDashboardTab(scooterData), Icons.Rounded.Build)
-                    TabNavigationItem(SpeedVolumeTab(), Icons.Rounded.PlayArrow)
+                    TabNavigationItem(MainDashboardTab, Icons.Rounded.Build)
+                    TabNavigationItem(SpeedVolumeTab, Icons.Rounded.PlayArrow)
                 }
             }
         ) { innerPadding ->
-            Column(
-                modifier = Modifier.padding(innerPadding)
+            CompositionLocalProvider(
+                LocalScooterStatus provides scooterData
             ) {
-                FadeTransition(navigator)
+                Column(
+                    modifier = Modifier.padding(innerPadding)
+                ) {
+                    FadeTransition(navigator)
+                }
             }
         }
     }
@@ -153,7 +156,7 @@ data class ScooterData(
     val speed: Double = 0.0,
     val gear: Int = 0,
     val maximumSpeed: Int = 0,
-    val voltage: Double = 0.0,
+    val voltage: Double = 48.0,
     val amperage: Double = 0.0,
     val temperature: Int = 0,
     val trip: Double = 0.0,
