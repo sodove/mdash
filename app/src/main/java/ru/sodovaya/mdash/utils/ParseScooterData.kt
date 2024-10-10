@@ -1,6 +1,6 @@
 package ru.sodovaya.mdash.utils
 
-import ru.sodovaya.mdash.ui.screens.ScooterData
+import ru.sodovaya.mdash.service.ScooterData
 
 fun ParseScooterData(scooterData: ScooterData = ScooterData(), value: ByteArray): ScooterData? {
     return if (value.size != 25) {

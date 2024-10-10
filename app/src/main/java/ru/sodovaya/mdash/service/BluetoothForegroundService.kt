@@ -41,10 +41,7 @@ class BluetoothForegroundService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Log.d("BFGS", "Service started")
         val deviceAddress: String? = intent?.getStringExtra("device")
-        val device = bluetoothAdapter.getRemoteDevice(deviceAddress)
-        device?.address?.let { Log.d("BFGS", it) }
-        device?.let { connectToDevice(it) }
-
+        if (deviceAddress != null) { connect(deviceAddress) }
         startForeground(
             /* id = */ 1,
             /* notification = */ createNotification(),
@@ -80,8 +77,16 @@ class BluetoothForegroundService : Service() {
     private fun connectToDevice(device: BluetoothDevice) {
         gatt = device.connectGatt(this, false, object : BluetoothGattCallback() {
             override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
+                val intent = Intent("BluetoothData")
+                intent.putExtra("connection", newState.toConnectionStateString())
+                sendBroadcast(intent)
+
                 if (newState == BluetoothProfile.STATE_CONNECTED) {
                     gatt.discoverServices()
+                }
+
+                if (newState == BluetoothProfile.STATE_DISCONNECTED) {
+                    connect(device.address)
                 }
             }
 
@@ -90,23 +95,29 @@ class BluetoothForegroundService : Service() {
                 characteristicRead = gatt.getService(SERVICE_UUID)?.getCharacteristic(READ_UUID)
 
                 enableNotifications(characteristicRead!!)
-                timer(period = 500) {
+                timer(period = 300) {
                     sendNoise(gatt, characteristicWrite!!)
                 }
             }
 
             @Deprecated("Deprecated in Java")
             override fun onCharacteristicChanged(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic) {
+                val connectionIntent = Intent("BluetoothData")
+                connectionIntent.putExtra("connection", "Got info")
+                sendBroadcast(connectionIntent)
                 if (characteristic.uuid == READ_UUID) {
                     val data = characteristic.value
-                    val intent = Intent("BluetoothData")
-                    intent.putExtra("data", data)
-                    sendBroadcast(intent)
+                    val dataIntent = Intent("BluetoothData")
+                    dataIntent.putExtra("data", data)
+                    sendBroadcast(dataIntent)
                 }
             }
 
             @Suppress("DEPRECATION")
             private fun enableNotifications(characteristic: BluetoothGattCharacteristic) {
+                val intent = Intent("BluetoothData")
+                intent.putExtra("connection", "Updating info")
+                sendBroadcast(intent)
                 if (gatt != null) {
                     gatt!!.setCharacteristicNotification(characteristic, true)
                     val descriptor =
@@ -141,5 +152,19 @@ class BluetoothForegroundService : Service() {
             @Suppress("DEPRECATION")
             gatt.writeCharacteristic(characteristic)
         }
+    }
+
+    private fun connect(deviceAddress: String) {
+        val device = bluetoothAdapter.getRemoteDevice(deviceAddress)
+        device?.address?.let { Log.d("BFGS", it) }
+        device?.let { connectToDevice(it) }
+    }
+
+    private fun Int.toConnectionStateString() = when (this) {
+        BluetoothProfile.STATE_CONNECTED -> "Connected"
+        BluetoothProfile.STATE_CONNECTING -> "Connecting"
+        BluetoothProfile.STATE_DISCONNECTED -> "Disconnected"
+        BluetoothProfile.STATE_DISCONNECTING -> "Disconnecting"
+        else -> "N/A"
     }
 }

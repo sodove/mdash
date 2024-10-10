@@ -40,6 +40,7 @@ import cafe.adriel.voyager.transitions.FadeTransition
 import ru.sodovaya.mdash.composables.LocalScooterStatus
 import ru.sodovaya.mdash.composables.TabNavigationItem
 import ru.sodovaya.mdash.service.BluetoothForegroundService
+import ru.sodovaya.mdash.service.ScooterData
 import ru.sodovaya.mdash.ui.tabs.MainDashboardTab
 import ru.sodovaya.mdash.ui.tabs.SpeedVolumeTab
 import ru.sodovaya.mdash.utils.ParseScooterData
@@ -66,10 +67,15 @@ fun ConnectedDeviceScreen(name: String, device: String, onClose: () -> Unit) {
 
     val receiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
-            val received = intent?.getByteArrayExtra("data")
-            received?.let { data ->
+            val receivedData = intent?.getByteArrayExtra("data")
+            receivedData?.let { data ->
                 ParseScooterData(scooterData = scooterData, value = data)
                     ?.let { parsed -> scooterData = parsed }
+            }
+
+            val connectionStatus = intent?.getStringExtra("connection")
+            connectionStatus?.let {
+                scooterData = scooterData.copy(isConnected = it)
             }
         }
     }
@@ -101,34 +107,34 @@ fun ConnectedDeviceScreen(name: String, device: String, onClose: () -> Unit) {
     Navigator(
         MainDashboardTab
     ) { navigator ->
-        Scaffold(
-            topBar = {
-                TopAppBar(
-                    actions = {
-                        IconButton(
-                            onClick = {disposeService(context, receiver); onClose.invoke() }
-                        ) {
-                            Icon(
-                                imageVector = Icons.Rounded.Close,
-                                contentDescription = null
-                            )
+        CompositionLocalProvider(
+            LocalScooterStatus provides scooterData
+        ) {
+            Scaffold(
+                topBar = {
+                    TopAppBar(
+                        actions = {
+                            IconButton(
+                                onClick = {disposeService(context, receiver); onClose.invoke() }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Rounded.Close,
+                                    contentDescription = null
+                                )
+                            }
+                        },
+                        title = {
+                            Text( (runCatching { name }.getOrNull() ?: "Unknown") + ": ${scooterData.isConnected}")
                         }
-                    },
-                    title = {
-                        Text( runCatching { name }.getOrNull() ?: "Unknown")
+                    )
+                },
+                bottomBar = {
+                    NavigationBar {
+                        TabNavigationItem(MainDashboardTab, Icons.Rounded.Build)
+                        TabNavigationItem(SpeedVolumeTab, Icons.Rounded.PlayArrow)
                     }
-                )
-            },
-            bottomBar = {
-                NavigationBar {
-                    TabNavigationItem(MainDashboardTab, Icons.Rounded.Build)
-                    TabNavigationItem(SpeedVolumeTab, Icons.Rounded.PlayArrow)
                 }
-            }
-        ) { innerPadding ->
-            CompositionLocalProvider(
-                LocalScooterStatus provides scooterData
-            ) {
+            ) { innerPadding ->
                 Column(
                     modifier = Modifier.padding(innerPadding)
                 ) {
@@ -151,14 +157,3 @@ fun disposeService(context: Context, receiver: BroadcastReceiver) {
     context.stopService(stopIntent)
 }
 
-data class ScooterData(
-    val battery: Int = 0,
-    val speed: Double = 0.0,
-    val gear: Int = 0,
-    val maximumSpeed: Int = 0,
-    val voltage: Double = 48.0,
-    val amperage: Double = 0.0,
-    val temperature: Int = 0,
-    val trip: Double = 0.0,
-    val totalDist: Double = 0.0
-)

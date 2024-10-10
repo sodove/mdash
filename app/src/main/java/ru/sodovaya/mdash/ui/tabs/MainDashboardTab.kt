@@ -27,6 +27,8 @@ import ru.sodovaya.mdash.composables.PercentageToColor
 import ru.sodovaya.mdash.composables.animateSmoothFloat
 import ru.sodovaya.mdash.ui.components.Gauge
 import ru.sodovaya.mdash.utils.convertToPercentage
+import ru.sodovaya.mdash.utils.toHumanReadableGear
+import ru.sodovaya.mdash.utils.wrap
 
 object MainDashboardTab: Screen {
     @OptIn(ExperimentalLayoutApi::class)
@@ -109,9 +111,9 @@ object MainDashboardTab: Screen {
                 Box(modifier = Modifier.height(20.dp))
 
                 Text("Battery ${scooterData.battery}")
-                Text("Gear: ${scooterData.gear}")
+                Text("Gear: ${scooterData.gear.toHumanReadableGear()}")
                 Text("Maximum Speed: ${scooterData.maximumSpeed}")
-                Text("Power: ${scooterData.voltage * scooterData.amperage}")
+                Text("Power: ${(scooterData.voltage * scooterData.amperage).toFloat().wrap(2)}")
                 Text("Trip: ${scooterData.trip}")
                 Text("Total Distance: ${scooterData.totalDist}")
             }
