@@ -2,7 +2,7 @@ package ru.sodovaya.mdash.utils
 
 import ru.sodovaya.mdash.ui.screens.ScooterData
 
-fun parseScooterData(scooterData: ScooterData = ScooterData(), value: ByteArray): ScooterData? {
+fun ParseScooterData(scooterData: ScooterData = ScooterData(), value: ByteArray): ScooterData? {
     return if (value.size != 25) {
         null
     } else {

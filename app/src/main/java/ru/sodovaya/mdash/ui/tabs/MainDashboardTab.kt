@@ -7,11 +7,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
@@ -22,8 +23,10 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.screen.Screen
 import ru.sodovaya.mdash.composables.LocalScooterStatus
-import ru.sodovaya.mdash.composables.SpaceSomehowPlease
-import ru.sodovaya.mdash.ui.components.TubeSpeedometer
+import ru.sodovaya.mdash.composables.PercentageToColor
+import ru.sodovaya.mdash.composables.animateSmoothFloat
+import ru.sodovaya.mdash.ui.components.Gauge
+import ru.sodovaya.mdash.utils.convertToPercentage
 
 object MainDashboardTab: Screen {
     @OptIn(ExperimentalLayoutApi::class)
@@ -41,12 +44,15 @@ object MainDashboardTab: Screen {
             verticalArrangement = Arrangement.spacedBy(8.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            TubeSpeedometer(
-                modifier = Modifier.aspectRatio(1f).weight(1f).padding(horizontal = width * 0.1f),
-                speed = scooterData.speed.toFloat(),
-                speedText = { Text("Speed: ${scooterData.speed}") },
-                maxSpeed = scooterData.maximumSpeed.toFloat(),
-                minSpeed = 0f
+            Gauge(
+                modifier = Modifier.padding(top = 10.dp).size(width * 0.7f),
+                percentage = convertToPercentage(
+                    currentValue = scooterData.speed.toFloat(),
+                    minValue = 0f,
+                    maxValue = scooterData.maximumSpeed.toFloat()
+                ),
+                strokeWidth = 100f,
+                text = "${animateSmoothFloat(scooterData.speed.toFloat())}km/h"
             )
 
             Column(
@@ -56,47 +62,47 @@ object MainDashboardTab: Screen {
                     .scrollable(rememberScrollState(), Orientation.Vertical)
             ) {
                 FlowRow(
-                    horizontalArrangement = Arrangement.SpaceSomehowPlease,
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp).offset(y = (-10).dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
                     maxItemsInEachRow = 3
                 ) {
-                    TubeSpeedometer(
-                        modifier = Modifier.height(80.dp).weight(1f),
-                        barWidth = 15.dp,
-                        maxSpeed = 54.6f,
-                        minSpeed = 54.6f - 40f,
-                        speedText = {
-                            Text(
-                                text = "SoC: ${scooterData.voltage}",
-                                maxLines = 1
-                            )
-                        },
-                        speed = scooterData.voltage.toFloat()
+                    val voltagePercentage = convertToPercentage(
+                        currentValue = scooterData.voltage.toFloat(),
+                        minValue = 39f,
+                        maxValue = 55f
                     )
-                    TubeSpeedometer(
-                        modifier = Modifier.height(80.dp).weight(1f),
-                        barWidth = 15.dp,
-                        maxSpeed = 40f,
-                        minSpeed = -40f,
-                        speedText = {
-                            Text(
-                                text = "Amp: ${scooterData.amperage}",
-                                maxLines = 1
-                            )
-                        },
-                        speed = scooterData.amperage.toFloat()
+
+                    Gauge(
+                        modifier = Modifier.size(width * 0.25f),
+                        percentage = voltagePercentage,
+                        gaugeColor = PercentageToColor(
+                            percentage = voltagePercentage,
+                            highIsBetter = false
+                        ),
+                        text = animateSmoothFloat(scooterData.voltage.toFloat()) + "V",
+                        additionalText = "SOC"
                     )
-                    TubeSpeedometer(
-                        modifier = Modifier.height(80.dp).weight(1f),
-                        barWidth = 15.dp,
-                        maxSpeed = 100f,
-                        minSpeed = -10f,
-                        speedText = {
-                            Text(
-                                text = "Temp: ${scooterData.temperature}",
-                                maxLines = 1
-                            )
-                        },
-                        speed = scooterData.temperature.toFloat()
+
+                    Gauge(
+                        modifier = Modifier.size(width * 0.25f),
+                        percentage = convertToPercentage(
+                            currentValue = scooterData.amperage.toFloat(),
+                            minValue = -20f,
+                            maxValue = 40f
+                        ),
+                        text = animateSmoothFloat(scooterData.amperage.toFloat()) + "A",
+                        additionalText = "AMP"
+                    )
+
+                    Gauge(
+                        modifier = Modifier.size(width * 0.25f),
+                        percentage = convertToPercentage(
+                            currentValue = scooterData.temperature.toFloat(),
+                            minValue = -10f,
+                            maxValue = 100f
+                        ),
+                        text = animateSmoothFloat(scooterData.temperature.toFloat()) + "°C",
+                        additionalText = "TEMP"
                     )
                 }
 

@@ -42,7 +42,7 @@ import ru.sodovaya.mdash.composables.TabNavigationItem
 import ru.sodovaya.mdash.service.BluetoothForegroundService
 import ru.sodovaya.mdash.ui.tabs.MainDashboardTab
 import ru.sodovaya.mdash.ui.tabs.SpeedVolumeTab
-import ru.sodovaya.mdash.utils.parseScooterData
+import ru.sodovaya.mdash.utils.ParseScooterData
 
 
 data class MainScreen(val device: String, val name: String): Screen {
@@ -68,7 +68,7 @@ fun ConnectedDeviceScreen(name: String, device: String, onClose: () -> Unit) {
         override fun onReceive(context: Context?, intent: Intent?) {
             val received = intent?.getByteArrayExtra("data")
             received?.let { data ->
-                parseScooterData(scooterData = scooterData, value = data)
+                ParseScooterData(scooterData = scooterData, value = data)
                     ?.let { parsed -> scooterData = parsed }
             }
         }
