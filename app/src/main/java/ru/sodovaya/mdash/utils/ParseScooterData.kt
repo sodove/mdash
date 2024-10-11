@@ -10,7 +10,11 @@ fun ParseScooterData(scooterData: ScooterData = ScooterData(), value: ByteArray)
             val speed =
                 ((value[6].toInt() and 0xFF) shl 8) or (value[7].toInt() and 0xFF)
             val voltage = (value[10].toInt() shl 8) or (value[11].toInt() and 0xFF)
-            val amperage = (value[12].toInt() shl 8) or (value[13].toInt() and 0xFF)
+            val amperage = if (value[12].toInt() < 128) {
+                (value[12] * 256 + value[13]) * 0.01
+            } else {
+                (65535 - (value[12] * 256 + value[13])) * -0.01
+            }
             val tripDistance = (value[16].toInt() shl 8) or (value[17].toInt() and 0xFF)
             val totalDistance =
                 (value[18].toInt() shl 16) or (value[19].toInt() shl 8) or (value[20].toInt() and 0xFF)
