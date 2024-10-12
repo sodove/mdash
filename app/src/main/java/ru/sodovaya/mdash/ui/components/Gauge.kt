@@ -58,8 +58,8 @@ fun Gauge(
     val animatedSweepAngle by animateFloatAsState(
         targetValue = sweepAngle,
         animationSpec = tween(
-            delayMillis = 100,
-            durationMillis = 300,
+            delayMillis = 50,
+            durationMillis = 150,
             easing = LinearEasing
         )
     )

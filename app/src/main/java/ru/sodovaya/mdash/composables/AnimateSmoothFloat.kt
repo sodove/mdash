@@ -10,7 +10,6 @@ import ru.sodovaya.mdash.utils.wrap
 
 @Composable
 inline fun animateSmoothFloat(targetValue: Float): String {
-    // Create an Animatable to hold the animated float value
     val animatedValue = remember { Animatable(targetValue) }
     
     // Launch a coroutine for animation whenever the target value changes
@@ -18,10 +17,11 @@ inline fun animateSmoothFloat(targetValue: Float): String {
         animatedValue.animateTo(
             targetValue,
             animationSpec = tween(
-                delayMillis = 100,
-                durationMillis = 300,
+                delayMillis = 50,
+                durationMillis = 150,
                 easing = LinearEasing
-            )        )
+            )
+        )
     }
 
     // Return the animated value as a State
