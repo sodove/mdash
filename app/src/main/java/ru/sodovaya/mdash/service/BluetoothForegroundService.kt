@@ -38,6 +38,7 @@ class BluetoothForegroundService : Service() {
     private var characteristicWrite: BluetoothGattCharacteristic? = null
     private var characteristicRead: BluetoothGattCharacteristic? = null
     private var scooterData = ScooterData()
+    private var settings = ServiceSettings()
 
     override fun onBind(intent: Intent?): IBinder? {
         return null
@@ -46,19 +47,22 @@ class BluetoothForegroundService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Log.d("BFGS", "Service started")
         val deviceAddress: String? = intent?.getStringExtra("device")
-        if (deviceAddress != null) { connect(deviceAddress) }
 
-        wakeLock =
-            (getSystemService(Context.POWER_SERVICE) as PowerManager).run {
-                newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "EndlessService::lock").apply {
-                    acquire(5*60*1000L /*5 minutes*/)
+
+        if (deviceAddress != null) {
+            connect(deviceAddress)
+            wakeLock =
+                (getSystemService(Context.POWER_SERVICE) as PowerManager).run {
+                    newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "EndlessService::lock").apply {
+                        acquire(5*60*1000L /*5 minutes*/)
+                    }
                 }
-            }
 
-        startForeground(
-            /* id = */ 1,
-            /* notification = */ createNotification(),
-        )
+            startForeground(
+                /* id = */ 1,
+                /* notification = */ createNotification(),
+            )
+        }
         return START_STICKY
     }
 

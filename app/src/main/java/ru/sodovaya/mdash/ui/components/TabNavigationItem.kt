@@ -15,12 +15,12 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import ru.sodovaya.mdash.ui.interfaces.ScreenTab
 
 @Composable
-internal fun RowScope.TabNavigationItem(tab: Screen, icon: ImageVector) {
+internal fun RowScope.TabNavigationItem(tab: ScreenTab, icon: ImageVector) {
     val navigator = LocalNavigator.currentOrThrow
     val isSelected = mutableStateOf(navigator.lastItemOrNull == tab)
 
@@ -33,7 +33,7 @@ internal fun RowScope.TabNavigationItem(tab: Screen, icon: ImageVector) {
         modifier = Modifier.alpha(if (isSelected.value) 1f else 0.6f),
         label = {
             Text(
-                text = tab.key.split(".").last(),
+                text = tab.tabName,
                 fontWeight = if (isSelected.value) FontWeight.ExtraBold else FontWeight.SemiBold,
                 color = if (isSelected.value) onSurface else onSurfaceVariant,
                 maxLines = 1,

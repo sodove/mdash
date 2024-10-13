@@ -7,7 +7,7 @@ data class ScooterData(
     val battery: Int = 0,
     val speed: Double = 0.0,
     val gear: Int = 0,
-    val maximumSpeed: Int = 0,
+    val maximumSpeed: Int = 60,
     val voltage: Double = 48.0,
     val amperage: Double = 0.0,
     val temperature: Int = 0,

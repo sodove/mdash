@@ -13,6 +13,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Modifier
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.transitions.FadeTransition
+import ru.sodovaya.mdash.settings.ServiceSettingsProvider
 import ru.sodovaya.mdash.ui.screens.ConnectionScreen
 import ru.sodovaya.mdash.ui.theme.MtelemetryTheme
 
@@ -22,15 +23,18 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            MtelemetryTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Column(
-                        modifier = Modifier.padding(innerPadding).consumeWindowInsets(innerPadding)
-                    ) {
-                        Navigator(
-                            ConnectionScreen()
+            ServiceSettingsProvider(this) {
+                MtelemetryTheme {
+                    Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                        Column(
+                            modifier = Modifier.padding(innerPadding)
+                                .consumeWindowInsets(innerPadding)
                         ) {
-                            FadeTransition(it)
+                            Navigator(
+                                ConnectionScreen()
+                            ) {
+                                FadeTransition(it)
+                            }
                         }
                     }
                 }

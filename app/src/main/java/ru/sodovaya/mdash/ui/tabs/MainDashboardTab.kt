@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import ru.sodovaya.mdash.composables.LocalScooterStatus
 import ru.sodovaya.mdash.composables.PercentageToColor
 import ru.sodovaya.mdash.composables.animateSmoothFloat
+import ru.sodovaya.mdash.settings.LocalServiceSettingsState
 import ru.sodovaya.mdash.ui.components.Gauge
 import ru.sodovaya.mdash.ui.interfaces.ScreenTab
 import ru.sodovaya.mdash.utils.ToHumanReadableGear
@@ -38,6 +39,7 @@ object MainDashboardTab: ScreenTab {
     override fun Content() {
         val configuration = LocalConfiguration.current
         val scooterData = LocalScooterStatus.current
+        val settingsState = LocalServiceSettingsState.current
         val width = configuration.screenWidthDp.dp
 
         Column(
@@ -52,7 +54,7 @@ object MainDashboardTab: ScreenTab {
                 modifier = Modifier.padding(top = 10.dp).size(width * 0.7f),
                 percentage = convertToPercentage(
                     currentValue = scooterData.speed.toFloat(),
-                    minValue = 0f,
+                    minValue = -0.001f, // haha hacks
                     maxValue = scooterData.maximumSpeed.toFloat()
                 ),
                 strokeWidth = 100f,
@@ -72,8 +74,8 @@ object MainDashboardTab: ScreenTab {
                 ) {
                     val voltagePercentage = convertToPercentage(
                         currentValue = scooterData.voltage.toFloat(),
-                        minValue = 39f,
-                        maxValue = 55f
+                        minValue = settingsState.settings.voltageMin,
+                        maxValue = settingsState.settings.voltageMax
                     )
 
                     Gauge(
@@ -91,22 +93,23 @@ object MainDashboardTab: ScreenTab {
                         modifier = Modifier.size(width * 0.25f),
                         percentage = convertToPercentage(
                             currentValue = scooterData.amperage.toFloat(),
-                            minValue = -20f,
-                            maxValue = 40f
+                            minValue = settingsState.settings.amperageMin,
+                            maxValue = settingsState.settings.amperageMax
                         ),
                         text = animateSmoothFloat(scooterData.amperage.toFloat()) + "A",
                         additionalText = "AMP"
                     )
 
+                    val power = (scooterData.voltage * scooterData.amperage)
                     Gauge(
                         modifier = Modifier.size(width * 0.25f),
                         percentage = convertToPercentage(
-                            currentValue = scooterData.temperature.toFloat(),
-                            minValue = -10f,
-                            maxValue = 100f
+                            currentValue = power.toFloat(),
+                            minValue = settingsState.settings.powerMin,
+                            maxValue = settingsState.settings.powerMax
                         ),
-                        text = animateSmoothFloat(scooterData.temperature.toFloat()) + "°C",
-                        additionalText = "TEMP"
+                        text = animateSmoothFloat(power.toFloat()).split(".")[0] + "W",
+                        additionalText = "PWR"
                     )
                 }
 
@@ -115,7 +118,7 @@ object MainDashboardTab: ScreenTab {
                 Text("Battery ${scooterData.battery}")
                 Text("Gear: ${scooterData.gear.ToHumanReadableGear()}")
                 Text("Maximum Speed: ${scooterData.maximumSpeed}")
-                Text("Power: ${(scooterData.voltage * scooterData.amperage).toFloat().wrap(2)}")
+                Text("Temperature: ${scooterData.temperature.toFloat().wrap(2)}°C")
                 Text("Trip: ${scooterData.trip}")
                 Text("Total Distance: ${scooterData.totalDist}")
             }
