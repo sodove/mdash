@@ -51,6 +51,7 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import kotlinx.coroutines.delay
+import ru.sodovaya.mdash.utils.safely
 
 class ConnectionScreen: Screen {
     @SuppressLint("MissingPermission")
@@ -62,7 +63,7 @@ class ConnectionScreen: Screen {
                 navigator.replaceAll(
                     MainScreen(
                         device = it.address,
-                        name = runCatching { it.name }.getOrNull() ?: "unk"
+                        name = safely { it.name } ?: "unk"
                     )
                 )
             }

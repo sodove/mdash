@@ -114,7 +114,7 @@ fun ConnectedDeviceScreen(name: String, device: String, onClose: () -> Unit) {
                             }
                         },
                         title = {
-                            Text( (runCatching { name }.getOrNull() ?: "Unknown") + ": ${scooterData.isConnected}")
+                            Text(text = "$name: ${scooterData.isConnected}")
                         }
                     )
                 },
