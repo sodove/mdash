@@ -57,8 +57,15 @@ class ConnectionScreen: Screen {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        FindDevicesScreen {
-            navigator.replaceAll(MainScreen(it.address, runCatching { it.name }.getOrNull() ?: "unk"))
+        BluetoothPermissionsWrapper {
+            FindDevicesScreen {
+                navigator.replaceAll(
+                    MainScreen(
+                        device = it.address,
+                        name = runCatching { it.name }.getOrNull() ?: "unk"
+                    )
+                )
+            }
         }
     }
 }

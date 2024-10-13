@@ -38,12 +38,12 @@ import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import cafe.adriel.voyager.transitions.FadeTransition
 import ru.sodovaya.mdash.composables.LocalScooterStatus
-import ru.sodovaya.mdash.composables.TabNavigationItem
 import ru.sodovaya.mdash.service.BluetoothForegroundService
 import ru.sodovaya.mdash.service.ScooterData
+import ru.sodovaya.mdash.ui.components.TabNavigationItem
 import ru.sodovaya.mdash.ui.tabs.MainDashboardTab
-import ru.sodovaya.mdash.ui.tabs.SpeedVolumeTab
-import ru.sodovaya.mdash.utils.ParseScooterData
+import ru.sodovaya.mdash.ui.tabs.SettingsTab
+import ru.sodovaya.mdash.utils.serializable
 
 
 data class MainScreen(val device: String, val name: String): Screen {
@@ -67,16 +67,8 @@ fun ConnectedDeviceScreen(name: String, device: String, onClose: () -> Unit) {
 
     val receiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
-            val receivedData = intent?.getByteArrayExtra("data")
-            receivedData?.let { data ->
-                ParseScooterData(scooterData = scooterData, value = data)
-                    ?.let { parsed -> scooterData = parsed }
-            }
-
-            val connectionStatus = intent?.getStringExtra("connection")
-            connectionStatus?.let {
-                scooterData = scooterData.copy(isConnected = it)
-            }
+            val receivedData = intent?.serializable<ScooterData>("data")
+            receivedData?.let { scooterData = it }
         }
     }
 
@@ -86,16 +78,14 @@ fun ConnectedDeviceScreen(name: String, device: String, onClose: () -> Unit) {
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             context.startForegroundService(intent)
-            Log.d("Service", "Started service")
         } else {
             context.startService(intent)
-            Log.d("Service", "Started service")
         }
         context.registerReceiver(
             receiver,
             IntentFilter("BluetoothData"),
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) Context.RECEIVER_EXPORTED else 0
-        ).run { Log.d("Service", "Trying to register receiver: $this") }
+        )
     }
 
     DisposableEffect(Unit) {
@@ -131,7 +121,7 @@ fun ConnectedDeviceScreen(name: String, device: String, onClose: () -> Unit) {
                 bottomBar = {
                     NavigationBar {
                         TabNavigationItem(MainDashboardTab, Icons.Rounded.Build)
-                        TabNavigationItem(SpeedVolumeTab, Icons.Rounded.PlayArrow)
+                        TabNavigationItem(SettingsTab, Icons.Rounded.PlayArrow)
                     }
                 }
             ) { innerPadding ->

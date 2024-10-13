@@ -7,9 +7,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import cafe.adriel.voyager.core.screen.Screen
+import ru.sodovaya.mdash.ui.interfaces.ScreenTab
 
-object SpeedVolumeTab: Screen {
+object SettingsTab: ScreenTab {
+    override val tabName = "Settings"
+
     @Composable
     override fun Content() {
         Column(

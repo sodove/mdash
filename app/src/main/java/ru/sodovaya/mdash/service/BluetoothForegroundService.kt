@@ -19,6 +19,7 @@ import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import ru.sodovaya.mdash.R
+import ru.sodovaya.mdash.utils.ParseScooterData
 import ru.sodovaya.mdash.utils.READ_UUID
 import ru.sodovaya.mdash.utils.SEND_UUID
 import ru.sodovaya.mdash.utils.SERVICE_UUID
@@ -33,6 +34,7 @@ class BluetoothForegroundService : Service() {
     private var gatt: BluetoothGatt? = null
     private var characteristicWrite: BluetoothGattCharacteristic? = null
     private var characteristicRead: BluetoothGattCharacteristic? = null
+    private var scooterData = ScooterData()
 
     override fun onBind(intent: Intent?): IBinder? {
         return null
@@ -77,8 +79,9 @@ class BluetoothForegroundService : Service() {
     private fun connectToDevice(device: BluetoothDevice) {
         gatt = device.connectGatt(this, false, object : BluetoothGattCallback() {
             override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
+                scooterData = scooterData.copy(isConnected = newState.toConnectionStateString())
                 val intent = Intent("BluetoothData")
-                intent.putExtra("connection", newState.toConnectionStateString())
+                intent.putExtra("data", scooterData)
                 sendBroadcast(intent)
 
                 if (newState == BluetoothProfile.STATE_CONNECTED) {
@@ -95,35 +98,39 @@ class BluetoothForegroundService : Service() {
                 characteristicRead = gatt.getService(SERVICE_UUID)?.getCharacteristic(READ_UUID)
 
                 enableNotifications(characteristicRead!!)
-                timer(period = 300) {
+                timer(period = 500) {
                     sendNoise(gatt, characteristicWrite!!)
                 }
             }
 
-            @Deprecated("Deprecated in Java")
-            override fun onCharacteristicChanged(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic) {
-                val connectionIntent = Intent("BluetoothData")
-                connectionIntent.putExtra("connection", "Got info")
-                sendBroadcast(connectionIntent)
+            override fun onCharacteristicChanged(
+                gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic, data: ByteArray
+            ) {
                 if (characteristic.uuid == READ_UUID) {
-                    val data = characteristic.value
+                    scooterData = scooterData.copy(isConnected = "Got info")
+                    ParseScooterData(scooterData = scooterData, value = data)?.let {
+                        scooterData = it
+                    }
                     val dataIntent = Intent("BluetoothData")
-                    dataIntent.putExtra("data", data)
+                    dataIntent.putExtra("data", scooterData)
                     sendBroadcast(dataIntent)
                 }
             }
 
-            @Suppress("DEPRECATION")
             private fun enableNotifications(characteristic: BluetoothGattCharacteristic) {
                 val intent = Intent("BluetoothData")
                 intent.putExtra("connection", "Updating info")
                 sendBroadcast(intent)
                 if (gatt != null) {
                     gatt!!.setCharacteristicNotification(characteristic, true)
-                    val descriptor =
-                        characteristic.getDescriptor(UUID.fromString("00002902-0000-1000-8000-00805f9b34fb"))
-                    descriptor?.value = BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
-                    gatt!!.writeDescriptor(descriptor)
+                    val descriptor = characteristic.getDescriptor(UUID.fromString("00002902-0000-1000-8000-00805f9b34fb"))
+
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        gatt!!.writeDescriptor(descriptor, BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE)
+                    } else {
+                        descriptor?.value = BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
+                        gatt!!.writeDescriptor(descriptor)
+                    }
                 }
             }
         })
@@ -147,9 +154,7 @@ class BluetoothForegroundService : Service() {
             )
         } else {
             characteristic.writeType = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
-            @Suppress("DEPRECATION")
             characteristic.value = data
-            @Suppress("DEPRECATION")
             gatt.writeCharacteristic(characteristic)
         }
     }

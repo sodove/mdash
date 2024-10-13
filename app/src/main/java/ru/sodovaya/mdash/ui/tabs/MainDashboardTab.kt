@@ -21,16 +21,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
-import cafe.adriel.voyager.core.screen.Screen
 import ru.sodovaya.mdash.composables.LocalScooterStatus
 import ru.sodovaya.mdash.composables.PercentageToColor
 import ru.sodovaya.mdash.composables.animateSmoothFloat
 import ru.sodovaya.mdash.ui.components.Gauge
-import ru.sodovaya.mdash.utils.convertToPercentage
+import ru.sodovaya.mdash.ui.interfaces.ScreenTab
 import ru.sodovaya.mdash.utils.ToHumanReadableGear
+import ru.sodovaya.mdash.utils.convertToPercentage
 import ru.sodovaya.mdash.utils.wrap
 
-object MainDashboardTab: Screen {
+object MainDashboardTab: ScreenTab {
+    override val tabName = "Dashboard"
+
     @OptIn(ExperimentalLayoutApi::class)
     @Composable
     override fun Content() {

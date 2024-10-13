@@ -1,4 +1,4 @@
-package ru.sodovaya.mdash.bt
+package ru.sodovaya.mdash.ui.screens
 
 import android.Manifest
 import android.app.Activity
@@ -24,6 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.getSystemService
+import ru.sodovaya.mdash.composables.PermissionBox
 
 
 @Composable

@@ -1,4 +1,4 @@
-package ru.sodovaya.mdash.bt
+package ru.sodovaya.mdash.composables
 
 import android.content.Intent
 import android.net.Uri

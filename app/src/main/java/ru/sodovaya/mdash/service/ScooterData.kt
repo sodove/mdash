@@ -1,5 +1,7 @@
 package ru.sodovaya.mdash.service
 
+import java.io.Serializable
+
 data class ScooterData(
     val isConnected: String = "Not connected",
     val battery: Int = 0,
@@ -11,4 +13,4 @@ data class ScooterData(
     val temperature: Int = 0,
     val trip: Double = 0.0,
     val totalDist: Double = 0.0
-)
+): Serializable
