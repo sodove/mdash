@@ -16,6 +16,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.IBinder
+import android.os.PowerManager
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import ru.sodovaya.mdash.R
@@ -31,6 +32,8 @@ class BluetoothForegroundService : Service() {
         val bluetoothManager = getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
         bluetoothManager.adapter
     }
+    private var wakeLock: PowerManager.WakeLock? = null
+
     private var gatt: BluetoothGatt? = null
     private var characteristicWrite: BluetoothGattCharacteristic? = null
     private var characteristicRead: BluetoothGattCharacteristic? = null
@@ -44,6 +47,14 @@ class BluetoothForegroundService : Service() {
         Log.d("BFGS", "Service started")
         val deviceAddress: String? = intent?.getStringExtra("device")
         if (deviceAddress != null) { connect(deviceAddress) }
+
+        wakeLock =
+            (getSystemService(Context.POWER_SERVICE) as PowerManager).run {
+                newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "EndlessService::lock").apply {
+                    acquire(5*60*1000L /*5 minutes*/)
+                }
+            }
+
         startForeground(
             /* id = */ 1,
             /* notification = */ createNotification(),
@@ -109,6 +120,7 @@ class BluetoothForegroundService : Service() {
                 if (characteristic.uuid == READ_UUID) {
                     scooterData = scooterData.copy(isConnected = "Got info")
                     ParseScooterData(scooterData = scooterData, value = data)?.let {
+                        wakeLock?.acquire(5*60*1000L)
                         scooterData = it
                     }
                     val dataIntent = Intent("BluetoothData")
@@ -138,7 +150,18 @@ class BluetoothForegroundService : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
-        gatt?.close()
+        try {
+            gatt?.close()
+            wakeLock?.let {
+                if (it.isHeld) {
+                    it.release()
+                }
+            }
+            stopForeground(STOP_FOREGROUND_DETACH)
+            stopSelf()
+        } catch (e: Exception) {
+            Log.d("TAG", "Service stopped without being started: ${e.message}")
+        }
     }
 
     private fun sendNoise(
