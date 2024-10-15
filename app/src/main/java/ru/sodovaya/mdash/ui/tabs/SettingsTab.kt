@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import ru.sodovaya.mdash.settings.LocalServiceSettingsState
 import ru.sodovaya.mdash.ui.components.SettingSlider
 import ru.sodovaya.mdash.ui.interfaces.ScreenTab
+import kotlin.math.roundToInt
 
 object SettingsTab : ScreenTab {
     override val tabName = "Settings"
@@ -60,7 +61,11 @@ object SettingsTab : ScreenTab {
                     value = settings.amperageMin,
                     range = -50f..0f,
                     onValueChange = { newValue ->
-                        settingsState.updateSettings(settings.copy(amperageMin = newValue))
+                        settingsState.updateSettings(
+                            settings.copy(
+                                amperageMin = newValue.roundToInt().toFloat()
+                            )
+                        )
                     })
             }
 
@@ -70,7 +75,11 @@ object SettingsTab : ScreenTab {
                     value = settings.amperageMax,
                     range = 0f..80f,
                     onValueChange = { newValue ->
-                        settingsState.updateSettings(settings.copy(amperageMax = newValue))
+                        settingsState.updateSettings(
+                            settings.copy(
+                                amperageMax = newValue.roundToInt().toFloat()
+                            )
+                        )
                     })
             }
 
@@ -80,7 +89,11 @@ object SettingsTab : ScreenTab {
                     value = settings.temperatureMin,
                     range = -50f..50f,
                     onValueChange = { newValue ->
-                        settingsState.updateSettings(settings.copy(temperatureMin = newValue))
+                        settingsState.updateSettings(
+                            settings.copy(
+                                temperatureMin = newValue.roundToInt().toFloat()
+                            )
+                        )
                     })
             }
 
@@ -90,7 +103,11 @@ object SettingsTab : ScreenTab {
                     value = settings.temperatureMax,
                     range = 0f..100f,
                     onValueChange = { newValue ->
-                        settingsState.updateSettings(settings.copy(temperatureMax = newValue))
+                        settingsState.updateSettings(
+                            settings.copy(
+                                temperatureMax = newValue.roundToInt().toFloat()
+                            )
+                        )
                     })
             }
 
@@ -100,7 +117,11 @@ object SettingsTab : ScreenTab {
                     value = settings.powerMin,
                     range = -1000f..0f,
                     onValueChange = { newValue ->
-                        settingsState.updateSettings(settings.copy(powerMin = newValue))
+                        settingsState.updateSettings(
+                            settings.copy(
+                                powerMin = newValue.roundToInt().toFloat()
+                            )
+                        )
                     })
             }
 
@@ -110,7 +131,11 @@ object SettingsTab : ScreenTab {
                     value = settings.powerMax,
                     range = 0f..3000f,
                     onValueChange = { newValue ->
-                        settingsState.updateSettings(settings.copy(powerMax = newValue))
+                        settingsState.updateSettings(
+                            settings.copy(
+                                powerMax = newValue.roundToInt().toFloat()
+                            )
+                        )
                     })
             }
 
@@ -122,7 +147,7 @@ object SettingsTab : ScreenTab {
                     onValueChange = { newValue ->
                         settingsState.updateSettings(
                             settings.copy(
-                                maximumVolumeAt = newValue
+                                maximumVolumeAt = newValue.roundToInt().toFloat()
                             )
                         )
                     })

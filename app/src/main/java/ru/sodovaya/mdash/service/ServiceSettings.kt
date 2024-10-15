@@ -1,5 +1,12 @@
 package ru.sodovaya.mdash.service
 
+enum class WakelockVariant {
+    VISIBLE_FULL_BRIGHT_SCREEN,
+    VISIBLE_DIMMED_SCREEN,
+    HIDDEN_ALLOWED_CPU,
+    DISABLED
+}
+
 data class ServiceSettings(
     val voltageMin: Float = 39f,
     val voltageMax: Float = 55f,
@@ -7,8 +14,9 @@ data class ServiceSettings(
     val amperageMax: Float = 40f,
     val temperatureMin: Float = -10f,
     val temperatureMax: Float = 90f,
-    val powerMin: Float = -500f,
+    val powerMin: Float = -800f,
     val powerMax: Float = 2000f,
     val maximumVolumeAt: Float = 30f,
-    val volumeServiceEnabled: Boolean = false
+    val volumeServiceEnabled: Boolean = false,
+    val wakelockVariant: WakelockVariant = WakelockVariant.HIDDEN_ALLOWED_CPU
 )

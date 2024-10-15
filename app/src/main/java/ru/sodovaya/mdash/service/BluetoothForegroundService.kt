@@ -20,6 +20,8 @@ import android.os.PowerManager
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import ru.sodovaya.mdash.R
+import ru.sodovaya.mdash.settings.ServiceSettingsPreferences
+import ru.sodovaya.mdash.settings.ServiceSettingsState
 import ru.sodovaya.mdash.utils.ParseScooterData
 import ru.sodovaya.mdash.utils.READ_UUID
 import ru.sodovaya.mdash.utils.SEND_UUID
@@ -46,17 +48,29 @@ class BluetoothForegroundService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Log.d("BFGS", "Service started")
+        val settingsState = ServiceSettingsState(ServiceSettings(), null)
+        settings = ServiceSettingsPreferences(this, settingsState).loadServiceSettings()
+
         val deviceAddress: String? = intent?.getStringExtra("device")
 
+        val wakelockLevel = when (settings.wakelockVariant) {
+            WakelockVariant.VISIBLE_FULL_BRIGHT_SCREEN -> PowerManager.SCREEN_BRIGHT_WAKE_LOCK
+            WakelockVariant.VISIBLE_DIMMED_SCREEN -> PowerManager.SCREEN_DIM_WAKE_LOCK
+            WakelockVariant.HIDDEN_ALLOWED_CPU -> PowerManager.PARTIAL_WAKE_LOCK
+            WakelockVariant.DISABLED -> 0
+        }
+
+        if (wakelockLevel != 0) {
+            wakeLock =
+                (getSystemService(Context.POWER_SERVICE) as PowerManager).run {
+                    newWakeLock(wakelockLevel, "EndlessService::lock").apply {
+                        acquire(5 * 60 * 1000L /*5 minutes*/)
+                    }
+                }
+        }
 
         if (deviceAddress != null) {
             connect(deviceAddress)
-            wakeLock =
-                (getSystemService(Context.POWER_SERVICE) as PowerManager).run {
-                    newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "EndlessService::lock").apply {
-                        acquire(5*60*1000L /*5 minutes*/)
-                    }
-                }
 
             startForeground(
                 /* id = */ 1,
