@@ -56,7 +56,6 @@ class BluetoothForegroundService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        Log.d("BFGS", "onStartCommand")
         val settingsState = ServiceSettingsState(ServiceSettings(), null)
         settings = ServiceSettingsPreferences(this, settingsState).loadServiceSettings()
 
