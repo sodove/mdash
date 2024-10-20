@@ -101,7 +101,7 @@ internal fun FindDevicesScreen(onConnect: (BluetoothDevice) -> Unit) {
             scanSettings = scanSettings,
             onScanFailed = {
                 scanning = false
-                Log.w("FindBLEDevicesSample", "Scan failed with error: $it")
+                Log.w("FindBLEDevice", "Scan failed with error: $it")
             },
             onDeviceFound = { scanResult ->
                 if (!devices.contains(scanResult.device)) {

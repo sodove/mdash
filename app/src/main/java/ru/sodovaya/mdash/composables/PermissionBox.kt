@@ -148,7 +148,7 @@ private fun PermissionScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
-            text = "Sample requires permission/s:",
+            text = "App requires permission/s:",
             style = MaterialTheme.typography.titleLarge,
             modifier = Modifier.padding(16.dp),
         )
