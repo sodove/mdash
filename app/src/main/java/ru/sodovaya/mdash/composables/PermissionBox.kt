@@ -34,13 +34,6 @@ import com.google.accompanist.permissions.MultiplePermissionsState
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 
-/**
- * The PermissionBox uses a [Box] to show a simple permission request UI when the provided [permission]
- * is revoked or the provided [onGranted] content if the permission is granted.
- *
- * This composable follows the permission request flow but for a complete example check the samples
- * under privacy/permissions
- */
 @Composable
 fun PermissionBox(
     modifier: Modifier = Modifier,
@@ -84,7 +77,7 @@ fun PermissionBox(
         errorText = if (rejectedPermissions.none { it in requiredPermissions }) {
             ""
         } else {
-            "${rejectedPermissions.joinToString()} required for the sample"
+            "${rejectedPermissions.joinToString()} required for the app"
         }
     }
     val allRequiredPermissionsGranted =
@@ -196,10 +189,10 @@ private fun PermissionScreen(
                 showRationale = false
             },
             title = {
-                Text(text = "Permissions required by the sample")
+                Text(text = "Permissions required by the app")
             },
             text = {
-                Text(text = "The sample requires the following permissions to work:\n $permissions")
+                Text(text = "The app requires the following permissions to work:\n $permissions")
             },
             confirmButton = {
                 TextButton(
