@@ -133,7 +133,7 @@ fun ConnectedDeviceScreen(name: String, device: String, onClose: () -> Unit) {
                             }
                         },
                         title = {
-                            Text(text = "$name: ${scooterData.isConnected}")
+                            Text(text = "${scooterData.deviceName ?: name}: ${scooterData.isConnected}")
                         }
                     )
                 },

@@ -14,6 +14,8 @@ import android.bluetooth.BluetoothManager
 import android.bluetooth.BluetoothProfile
 import android.content.Context
 import android.content.Intent
+import android.media.AudioManager
+import android.media.AudioManager.STREAM_MUSIC
 import android.os.Build
 import android.os.IBinder
 import android.os.PowerManager
@@ -26,8 +28,12 @@ import ru.sodovaya.mdash.utils.ParseScooterData
 import ru.sodovaya.mdash.utils.READ_UUID
 import ru.sodovaya.mdash.utils.SEND_UUID
 import ru.sodovaya.mdash.utils.SERVICE_UUID
+import ru.sodovaya.mdash.utils.convertToPercentage
+import ru.sodovaya.mdash.utils.midway
+import java.util.Timer
 import java.util.UUID
 import kotlin.concurrent.timer
+import kotlin.math.roundToInt
 
 class BluetoothForegroundService : Service() {
     private val bluetoothAdapter: BluetoothAdapter by lazy {
@@ -42,6 +48,8 @@ class BluetoothForegroundService : Service() {
     private var isAlive = false
     private var scooterData = ScooterData()
     private var settings = ServiceSettings()
+    private var noiseTimer: Timer? = null
+    private var volumeTimer: Timer? = null
 
     override fun onBind(intent: Intent?): IBinder? {
         return null
@@ -60,6 +68,8 @@ class BluetoothForegroundService : Service() {
             WakelockVariant.DISABLED -> 0
         }
 
+        volumeThreadWorker()
+
         if (wakelockLevel != 0) {
             wakeLock?.release()
             wakeLock =
@@ -73,12 +83,11 @@ class BluetoothForegroundService : Service() {
         if (deviceAddress != null) {
             isAlive = true
             connect(deviceAddress)
-
-            startForeground(
-                /* id = */ 1,
-                /* notification = */ createNotification(),
-            )
         }
+        startForeground(
+            /* id = */ 1,
+            /* notification = */ createNotification(),
+        )
         return START_STICKY
     }
 
@@ -110,7 +119,10 @@ class BluetoothForegroundService : Service() {
     private fun connectToDevice(device: BluetoothDevice) {
         gatt = device.connectGatt(this, false, object : BluetoothGattCallback() {
             override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
-                scooterData = scooterData.copy(isConnected = newState.toConnectionStateString())
+                scooterData = scooterData.copy(
+                    deviceName = gatt.device.name.midway(),
+                    isConnected = newState.toConnectionStateString()
+                )
                 val intent = Intent("BluetoothData")
                 intent.putExtra("data", scooterData)
                 sendBroadcast(intent)
@@ -141,7 +153,9 @@ class BluetoothForegroundService : Service() {
                 }
 
                 enableNotifications(characteristicRead!!)
-                timer(period = 500) {
+
+                noiseTimer?.cancel()
+                noiseTimer = timer(period = 500) {
                     sendNoise(gatt, characteristicWrite!!)
                 }
             }
@@ -186,6 +200,8 @@ class BluetoothForegroundService : Service() {
         super.onDestroy()
         isAlive = false
         try {
+            noiseTimer?.cancel()
+            volumeTimer?.cancel()
             gatt?.close()
             wakeLock?.let {
                 if (it.isHeld) {
@@ -214,6 +230,30 @@ class BluetoothForegroundService : Service() {
             characteristic.writeType = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
             characteristic.value = data
             gatt.writeCharacteristic(characteristic)
+        }
+    }
+
+    private fun volumeThreadWorker() {
+        val audioManager = applicationContext.getSystemService(AUDIO_SERVICE) as AudioManager
+        val maxVolume = audioManager.getStreamMaxVolume(STREAM_MUSIC)
+
+        volumeTimer?.cancel()
+        if (settings.volumeServiceEnabled) {
+            volumeTimer = timer(period = 150) {
+                val minimalVolume = settings.minimalVolume
+                val maximumVolumeAt = settings.maximumVolumeAt
+                val speed = scooterData.speed
+                val calculatedVolume = run {
+                    (convertToPercentage(
+                        currentValue = speed.toFloat(),
+                        minValue = 0f,
+                        maxValue = maximumVolumeAt
+                    ) / 100 * maxVolume
+                    ).coerceIn(minimalVolume, maxVolume.toFloat())
+                }
+
+                audioManager.setStreamVolume(STREAM_MUSIC, calculatedVolume.roundToInt(), 0)
+            }
         }
     }
 

@@ -16,6 +16,7 @@ data class ServiceSettings(
     val powerMin: Float = -800f,
     val powerMax: Float = 2000f,
     val maximumVolumeAt: Float = 30f,
+    val minimalVolume: Float = 5f,
     val volumeServiceEnabled: Boolean = false,
     val wakelockVariant: WakelockVariant = WakelockVariant.HIDDEN_ALLOWED_CPU
 )

@@ -3,6 +3,7 @@ package ru.sodovaya.mdash.service
 import java.io.Serializable
 
 data class ScooterData(
+    val deviceName: String? = null,
     val isConnected: String = "Not connected",
     val battery: Int = 0,
     val speed: Double = 0.0,

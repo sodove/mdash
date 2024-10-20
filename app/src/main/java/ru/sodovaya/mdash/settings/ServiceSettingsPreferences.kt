@@ -29,6 +29,7 @@ class ServiceSettingsPreferences(
             putFloat("powerMin", settings.powerMin)
             putFloat("powerMax", settings.powerMax)
             putFloat("maximumVolumeAt", settings.maximumVolumeAt)
+            putFloat("minimalVolume", settings.minimalVolume)
             putBoolean("volumeServiceEnabled", settings.volumeServiceEnabled)
             putString("wakelockVariant", settings.wakelockVariant.toString())
             apply()
@@ -45,6 +46,7 @@ class ServiceSettingsPreferences(
             temperatureMax = sharedPreferences.getFloat("temperatureMax", 90f),
             powerMin = sharedPreferences.getFloat("powerMin", -500f),
             powerMax = sharedPreferences.getFloat("powerMax", 2000f),
+            minimalVolume = sharedPreferences.getFloat("minimalVolume", 5f),
             maximumVolumeAt = sharedPreferences.getFloat("maximumVolumeAt", 30f),
             volumeServiceEnabled = sharedPreferences.getBoolean("volumeServiceEnabled", false),
             wakelockVariant = sharedPreferences.getString("wakelockVariant", null)

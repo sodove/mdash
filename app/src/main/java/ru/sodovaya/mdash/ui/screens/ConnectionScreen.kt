@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material3.CircularProgressIndicator
@@ -38,6 +39,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -51,6 +53,7 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import kotlinx.coroutines.delay
+import ru.sodovaya.mdash.utils.midway
 import ru.sodovaya.mdash.utils.safely
 
 class ConnectionScreen: Screen {
@@ -63,7 +66,7 @@ class ConnectionScreen: Screen {
                 navigator.replaceAll(
                     MainScreen(
                         device = it.address,
-                        name = safely { it.name } ?: "unk"
+                        name = safely { it.name.midway() } ?: "unk"
                     )
                 )
             }
@@ -177,13 +180,14 @@ internal fun BluetoothDeviceItem(
 ) {
     Row(
         modifier = Modifier
-            .padding(vertical = 8.dp)
+            .clip(RoundedCornerShape(100))
             .fillMaxWidth()
-            .clickable { onConnect(bluetoothDevice) },
+            .clickable { onConnect(bluetoothDevice) }
+            .padding(vertical = 8.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         Text(
-            text = bluetoothDevice.name ?: "N/A",
+            text = bluetoothDevice.name.midway(),
             style = TextStyle(fontWeight = FontWeight.Normal)
         )
         Text(bluetoothDevice.address)
