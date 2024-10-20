@@ -39,6 +39,7 @@ class BluetoothForegroundService : Service() {
     private var gatt: BluetoothGatt? = null
     private var characteristicWrite: BluetoothGattCharacteristic? = null
     private var characteristicRead: BluetoothGattCharacteristic? = null
+    private var isAlive = false
     private var scooterData = ScooterData()
     private var settings = ServiceSettings()
 
@@ -47,20 +48,20 @@ class BluetoothForegroundService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        Log.d("BFGS", "Service started")
+        Log.d("BFGS", "onStartCommand")
         val settingsState = ServiceSettingsState(ServiceSettings(), null)
         settings = ServiceSettingsPreferences(this, settingsState).loadServiceSettings()
 
         val deviceAddress: String? = intent?.getStringExtra("device")
 
         val wakelockLevel = when (settings.wakelockVariant) {
-            WakelockVariant.VISIBLE_FULL_BRIGHT_SCREEN -> PowerManager.SCREEN_BRIGHT_WAKE_LOCK
-            WakelockVariant.VISIBLE_DIMMED_SCREEN -> PowerManager.SCREEN_DIM_WAKE_LOCK
+            WakelockVariant.KEEP_SCREEN_ON -> PowerManager.PARTIAL_WAKE_LOCK
             WakelockVariant.HIDDEN_ALLOWED_CPU -> PowerManager.PARTIAL_WAKE_LOCK
             WakelockVariant.DISABLED -> 0
         }
 
         if (wakelockLevel != 0) {
+            wakeLock?.release()
             wakeLock =
                 (getSystemService(Context.POWER_SERVICE) as PowerManager).run {
                     newWakeLock(wakelockLevel, "EndlessService::lock").apply {
@@ -70,6 +71,7 @@ class BluetoothForegroundService : Service() {
         }
 
         if (deviceAddress != null) {
+            isAlive = true
             connect(deviceAddress)
 
             startForeground(
@@ -118,13 +120,25 @@ class BluetoothForegroundService : Service() {
                 }
 
                 if (newState == BluetoothProfile.STATE_DISCONNECTED) {
-                    connect(device.address)
+                    if (isAlive.not())
+                        onDestroy()
+                    else
+                        connect(device.address)
                 }
             }
 
             override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
                 characteristicWrite = gatt.getService(SERVICE_UUID)?.getCharacteristic(SEND_UUID)
                 characteristicRead = gatt.getService(SERVICE_UUID)?.getCharacteristic(READ_UUID)
+
+                if (characteristicWrite == null || characteristicRead == null) {
+                    scooterData = scooterData.copy(isConnected = "Services failed")
+                    val dataIntent = Intent("BluetoothData")
+                    dataIntent.putExtra("data", scooterData)
+                    sendBroadcast(dataIntent)
+                    onDestroy()
+                    return
+                }
 
                 enableNotifications(characteristicRead!!)
                 timer(period = 500) {
@@ -164,10 +178,13 @@ class BluetoothForegroundService : Service() {
                 }
             }
         })
+
+        gatt?.requestMtu(2000)
     }
 
     override fun onDestroy() {
         super.onDestroy()
+        isAlive = false
         try {
             gatt?.close()
             wakeLock?.let {
@@ -175,7 +192,7 @@ class BluetoothForegroundService : Service() {
                     it.release()
                 }
             }
-            stopForeground(STOP_FOREGROUND_DETACH)
+            stopForeground(STOP_FOREGROUND_REMOVE)
             stopSelf()
         } catch (e: Exception) {
             Log.d("TAG", "Service stopped without being started: ${e.message}")

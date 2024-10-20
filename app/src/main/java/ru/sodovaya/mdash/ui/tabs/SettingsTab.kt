@@ -1,23 +1,37 @@
 package ru.sodovaya.mdash.ui.tabs
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
+import ru.sodovaya.mdash.service.WakelockVariant
 import ru.sodovaya.mdash.settings.LocalServiceSettingsState
+import ru.sodovaya.mdash.ui.components.SettingRangeSlider
 import ru.sodovaya.mdash.ui.components.SettingSlider
 import ru.sodovaya.mdash.ui.interfaces.ScreenTab
+import ru.sodovaya.mdash.utils.CapitalizeWords
+import ru.sodovaya.mdash.utils.wrap
 import kotlin.math.roundToInt
 
 object SettingsTab : ScreenTab {
@@ -35,105 +49,61 @@ object SettingsTab : ScreenTab {
                 .scrollable(rememberScrollState(), Orientation.Vertical),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Voltage Min
+            // Voltage
             item {
-                SettingSlider(label = "Voltage Min",
-                    value = settings.voltageMin,
-                    range = 30f..60f,
-                    onValueChange = { newValue ->
-                        settingsState.updateSettings(settings.copy(voltageMin = newValue))
-                    })
-            }
-
-            // Voltage Max
-            item {
-                SettingSlider(label = "Voltage Max",
-                    value = settings.voltageMax,
+                SettingRangeSlider(label = "Voltage Range",
+                    value = settings.voltageMin .. settings.voltageMax,
                     range = 30f..80f,
                     onValueChange = { newValue ->
-                        settingsState.updateSettings(settings.copy(voltageMax = newValue))
-                    })
-            }
-
-            // Amperage Min
-            item {
-                SettingSlider(label = "Amperage Min",
-                    value = settings.amperageMin,
-                    range = -50f..0f,
-                    onValueChange = { newValue ->
                         settingsState.updateSettings(
                             settings.copy(
-                                amperageMin = newValue.roundToInt().toFloat()
+                                voltageMin = newValue.start.wrap(1).toFloat(),
+                                voltageMax = newValue.endInclusive.wrap(1).toFloat()
                             )
                         )
                     })
             }
 
-            // Amperage Max
+            // Amperage
             item {
-                SettingSlider(label = "Amperage Max",
-                    value = settings.amperageMax,
-                    range = 0f..80f,
+                SettingRangeSlider(label = "Amperage Range",
+                    value = settings.amperageMin .. settings.amperageMax,
+                    range = -50f..80f,
                     onValueChange = { newValue ->
                         settingsState.updateSettings(
                             settings.copy(
-                                amperageMax = newValue.roundToInt().toFloat()
+                                amperageMin = newValue.start.roundToInt().toFloat(),
+                                amperageMax = newValue.endInclusive.roundToInt().toFloat()
                             )
                         )
                     })
             }
 
-            // Temperature Min
+            // Temperature
             item {
-                SettingSlider(label = "Temperature Min",
-                    value = settings.temperatureMin,
-                    range = -50f..50f,
+                SettingRangeSlider(label = "Temperature Range",
+                    value = settings.temperatureMin .. settings.temperatureMax,
+                    range = -50f..100f,
                     onValueChange = { newValue ->
                         settingsState.updateSettings(
                             settings.copy(
-                                temperatureMin = newValue.roundToInt().toFloat()
+                                temperatureMin = newValue.start.roundToInt().toFloat(),
+                                temperatureMax = newValue.endInclusive.roundToInt().toFloat()
                             )
                         )
                     })
             }
 
-            // Temperature Max
+            // Power
             item {
-                SettingSlider(label = "Temperature Max",
-                    value = settings.temperatureMax,
-                    range = 0f..100f,
+                SettingRangeSlider(label = "Power Gauge",
+                    value = settings.powerMin .. settings.powerMax,
+                    range = -1500f..3000f,
                     onValueChange = { newValue ->
                         settingsState.updateSettings(
                             settings.copy(
-                                temperatureMax = newValue.roundToInt().toFloat()
-                            )
-                        )
-                    })
-            }
-
-            // Power Min
-            item {
-                SettingSlider(label = "Power Min",
-                    value = settings.powerMin,
-                    range = -1000f..0f,
-                    onValueChange = { newValue ->
-                        settingsState.updateSettings(
-                            settings.copy(
-                                powerMin = newValue.roundToInt().toFloat()
-                            )
-                        )
-                    })
-            }
-
-            // Power Max
-            item {
-                SettingSlider(label = "Power Max",
-                    value = settings.powerMax,
-                    range = 0f..3000f,
-                    onValueChange = { newValue ->
-                        settingsState.updateSettings(
-                            settings.copy(
-                                powerMax = newValue.roundToInt().toFloat()
+                                powerMin = newValue.start.roundToInt().toFloat(),
+                                powerMax = newValue.endInclusive.roundToInt().toFloat()
                             )
                         )
                     })
@@ -168,6 +138,52 @@ object SettingsTab : ScreenTab {
                             )
                         )
                     })
+                }
+            }
+
+            // Wakelock Variant
+            item {
+                var expanded by remember { mutableStateOf(false) }
+
+                Box(
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(100))
+                            .clickable { expanded = true }
+                            .padding(vertical = 8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = "Wakelock Variant:"
+                        )
+                        Text(
+                            text = settings.wakelockVariant
+                                .toString()
+                                .replace("_", " ")
+                                .CapitalizeWords()
+                        )
+                    }
+
+                    DropdownMenu(
+                        modifier = Modifier.padding(horizontal = 16.dp).fillMaxWidth(),
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false }
+                    ) {
+                        WakelockVariant.entries.forEach { variant ->
+                            DropdownMenuItem(
+                                onClick = {
+                                    settingsState.updateSettings(settings.copy(wakelockVariant = variant))
+                                    expanded = false
+                                },
+                                text = {
+                                    Text(text = variant.name.replace("_", " ").CapitalizeWords())
+                                }
+                            )
+                        }
+                    }
                 }
             }
         }

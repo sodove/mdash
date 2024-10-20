@@ -1,8 +1,7 @@
 package ru.sodovaya.mdash.service
 
 enum class WakelockVariant {
-    VISIBLE_FULL_BRIGHT_SCREEN,
-    VISIBLE_DIMMED_SCREEN,
+    KEEP_SCREEN_ON,
     HIDDEN_ALLOWED_CPU,
     DISABLED
 }

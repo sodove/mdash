@@ -8,6 +8,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.os.Build
 import android.util.Log
+import android.view.WindowManager
 import androidx.annotation.RequiresPermission
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
@@ -42,9 +43,12 @@ import ru.sodovaya.mdash.R
 import ru.sodovaya.mdash.composables.LocalScooterStatus
 import ru.sodovaya.mdash.service.BluetoothForegroundService
 import ru.sodovaya.mdash.service.ScooterData
+import ru.sodovaya.mdash.service.WakelockVariant
+import ru.sodovaya.mdash.settings.LocalServiceSettingsState
 import ru.sodovaya.mdash.ui.components.TabNavigationItem
 import ru.sodovaya.mdash.ui.tabs.MainDashboardTab
 import ru.sodovaya.mdash.ui.tabs.SettingsTab
+import ru.sodovaya.mdash.utils.findActivity
 import ru.sodovaya.mdash.utils.serializable
 
 
@@ -65,12 +69,25 @@ data class MainScreen(val device: String, val name: String): Screen {
 @Composable
 fun ConnectedDeviceScreen(name: String, device: String, onClose: () -> Unit) {
     val context = LocalContext.current
+    val settingsState = LocalServiceSettingsState.current
+    val wakelockVariant = settingsState.settings.wakelockVariant
+
     var scooterData by remember { mutableStateOf(ScooterData()) }
 
     val receiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             val receivedData = intent?.serializable<ScooterData>("data")
             receivedData?.let { scooterData = it }
+        }
+    }
+
+    DisposableEffect(wakelockVariant) {
+        val window = context.findActivity()?.window
+        if (wakelockVariant == WakelockVariant.KEEP_SCREEN_ON){
+            window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        }
+        onDispose {
+            window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         }
     }
 

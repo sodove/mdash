@@ -3,6 +3,7 @@ package ru.sodovaya.mdash.settings
 import android.content.Context
 import android.content.SharedPreferences
 import ru.sodovaya.mdash.service.ServiceSettings
+import ru.sodovaya.mdash.service.WakelockVariant
 
 class ServiceSettingsPreferences(
     private val context: Context,
@@ -29,6 +30,7 @@ class ServiceSettingsPreferences(
             putFloat("powerMax", settings.powerMax)
             putFloat("maximumVolumeAt", settings.maximumVolumeAt)
             putBoolean("volumeServiceEnabled", settings.volumeServiceEnabled)
+            putString("wakelockVariant", settings.wakelockVariant.toString())
             apply()
         }
     }
@@ -44,7 +46,9 @@ class ServiceSettingsPreferences(
             powerMin = sharedPreferences.getFloat("powerMin", -500f),
             powerMax = sharedPreferences.getFloat("powerMax", 2000f),
             maximumVolumeAt = sharedPreferences.getFloat("maximumVolumeAt", 30f),
-            volumeServiceEnabled = sharedPreferences.getBoolean("volumeServiceEnabled", false)
+            volumeServiceEnabled = sharedPreferences.getBoolean("volumeServiceEnabled", false),
+            wakelockVariant = sharedPreferences.getString("wakelockVariant", null)
+                ?.let { WakelockVariant.valueOf(it) } ?: WakelockVariant.HIDDEN_ALLOWED_CPU
         )
     }
 }
