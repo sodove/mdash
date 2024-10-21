@@ -11,8 +11,6 @@ data class ServiceSettings(
     val voltageMax: Float = 55f,
     val amperageMin: Float = -20f,
     val amperageMax: Float = 40f,
-    val temperatureMin: Float = -10f,
-    val temperatureMax: Float = 90f,
     val powerMin: Float = -800f,
     val powerMax: Float = 2000f,
     val maximumVolumeAt: Float = 30f,

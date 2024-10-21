@@ -24,8 +24,6 @@ class ServiceSettingsPreferences(
             putFloat("voltageMax", settings.voltageMax)
             putFloat("amperageMin", settings.amperageMin)
             putFloat("amperageMax", settings.amperageMax)
-            putFloat("temperatureMin", settings.temperatureMin)
-            putFloat("temperatureMax", settings.temperatureMax)
             putFloat("powerMin", settings.powerMin)
             putFloat("powerMax", settings.powerMax)
             putFloat("maximumVolumeAt", settings.maximumVolumeAt)
@@ -42,8 +40,6 @@ class ServiceSettingsPreferences(
             voltageMax = sharedPreferences.getFloat("voltageMax", 55f),
             amperageMin = sharedPreferences.getFloat("amperageMin", -20f),
             amperageMax = sharedPreferences.getFloat("amperageMax", 40f),
-            temperatureMin = sharedPreferences.getFloat("temperatureMin", -10f),
-            temperatureMax = sharedPreferences.getFloat("temperatureMax", 90f),
             powerMin = sharedPreferences.getFloat("powerMin", -500f),
             powerMax = sharedPreferences.getFloat("powerMax", 2000f),
             minimalVolume = sharedPreferences.getFloat("minimalVolume", 5f),

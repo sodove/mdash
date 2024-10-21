@@ -105,23 +105,6 @@ object SettingsTab : ScreenTab {
                 )
             }
 
-            // Temperature
-            item {
-                SettingRangeSlider(
-                    label = "Temperature Gauge Range",
-                    value = settings.temperatureMin .. settings.temperatureMax,
-                    range = -50f..100f,
-                    onValueChange = { newValue ->
-                        settingsState.updateSettings(
-                            settings.copy(
-                                temperatureMin = newValue.start.roundToInt().toFloat(),
-                                temperatureMax = newValue.endInclusive.roundToInt().toFloat()
-                            )
-                        )
-                    }
-                )
-            }
-
             // Power
             item {
                 SettingRangeSlider(
