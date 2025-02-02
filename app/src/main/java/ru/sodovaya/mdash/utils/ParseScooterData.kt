@@ -1,25 +1,23 @@
+@file:OptIn(ExperimentalStdlibApi::class)
+
 package ru.sodovaya.mdash.utils
 
+import android.util.Log
 import ru.sodovaya.mdash.service.ScooterData
 
 fun ParseScooterData(scooterData: ScooterData = ScooterData(), value: ByteArray): ScooterData? {
-    if (value.size == 20) {
-        return scooterData.copy(
-            partialDataCache = value
-        )
-    }
+    Log.d("ParseScooterData", "Received new bytearray: ${value.toHexString(HexFormat.Default)}")
 
-    if (value.size == 5 && scooterData.partialDataCache != null) {
-        val fullData = scooterData.partialDataCache + value
-        return parseFullData(scooterData, fullData)?.copy(
+    val updatedCache = (scooterData.partialDataCache ?: byteArrayOf()) + value
+
+    return if (updatedCache.size >= 25) {
+        val fullData = updatedCache.take(25).toByteArray()
+
+        parseFullData(scooterData, fullData)?.copy(
             partialDataCache = null
         )
-    }
-
-    return if (value.size == 25) {
-        parseFullData(scooterData, value)
     } else {
-        null
+        scooterData.copy(partialDataCache = updatedCache)
     }
 }
 

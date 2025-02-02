@@ -1,6 +1,7 @@
 package ru.sodovaya.mdash.ui.tabs
 
 import android.app.Activity.AUDIO_SERVICE
+import android.content.Context
 import android.content.Intent
 import android.media.AudioManager
 import android.media.AudioManager.STREAM_MUSIC
@@ -17,6 +18,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Switch
@@ -32,6 +34,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.core.content.FileProvider
 import ru.sodovaya.mdash.service.BluetoothForegroundService
 import ru.sodovaya.mdash.service.WakelockVariant
 import ru.sodovaya.mdash.settings.LocalServiceSettingsState
@@ -40,6 +43,10 @@ import ru.sodovaya.mdash.ui.components.SettingSlider
 import ru.sodovaya.mdash.ui.interfaces.ScreenTab
 import ru.sodovaya.mdash.utils.CapitalizeWords
 import ru.sodovaya.mdash.utils.wrap
+import java.io.BufferedReader
+import java.io.File
+import java.io.FileWriter
+import java.io.InputStreamReader
 import kotlin.math.roundToInt
 
 object SettingsTab : ScreenTab {
@@ -71,12 +78,22 @@ object SettingsTab : ScreenTab {
                 .scrollable(rememberScrollState(), Orientation.Vertical),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Voltage
+            item {
+                Button(onClick = {
+                    val logFile = saveLogcatToFile(context)
+                    logFile?.let {
+                        shareLogFile(context, it)
+                    }
+                }) {
+                    Text("Send Logcat")
+                }
+            }
+
             item {
                 SettingRangeSlider(
                     label = "Voltage Gauge Range",
                     value = settings.voltageMin .. settings.voltageMax,
-                    range = 30f..80f,
+                    range = 30f..90f,
                     onValueChange = { newValue ->
                         settingsState.updateSettings(
                             settings.copy(
@@ -221,5 +238,42 @@ object SettingsTab : ScreenTab {
                 }
             }
         }
+    }
+
+    private fun saveLogcatToFile(context: Context): File? {
+        return try {
+            val logFile = File(context.cacheDir, "logcat_output.txt")
+            val process = Runtime.getRuntime().exec("logcat -d")
+            val reader = BufferedReader(InputStreamReader(process.inputStream))
+            val writer = FileWriter(logFile)
+            var line: String?
+            while (reader.readLine().also { line = it } != null) {
+                writer.appendLine(line)
+            }
+            writer.flush()
+            writer.close()
+            reader.close()
+            logFile
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
+
+    private fun shareLogFile(context: Context, logFile: File) {
+        val uri = FileProvider.getUriForFile(
+            context,
+            "${context.packageName}.provider",
+            logFile
+        )
+        
+        val intent = Intent(Intent.ACTION_SEND).apply {
+            type = "text/plain"
+            putExtra(Intent.EXTRA_STREAM, uri)
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+
+        val chooser = Intent.createChooser(intent, "Send Logcat using")
+        context.startActivity(chooser)
     }
 }
