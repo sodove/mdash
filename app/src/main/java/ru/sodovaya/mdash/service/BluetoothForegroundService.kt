@@ -218,7 +218,7 @@ class BluetoothForegroundService : Service() {
         gatt: BluetoothGatt,
         characteristic: BluetoothGattCharacteristic,
     ) {
-        val data = byteArrayOf(0xFF.toByte())
+        val data = byteArrayOf(0xa5.toByte(), 0x02.toByte(), 0xfd.toByte(), 0x5a.toByte())
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             gatt.writeCharacteristic(
                 characteristic,
